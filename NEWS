@@ -1,3 +1,12 @@
+What's new in at-spi2-core 2.59.1:
+
+* Added a build option to link against dbus-glib, rather than using the
+  internal fork for the main loop integration code.
+
+* Add ATSPI_MODIFIER_SUPER as an alias for META3.
+
+* Various documentation fixes.
+
 What's new in at-spi2-core 2.59.0:
 
     meson: Use dbus-broker by default.
