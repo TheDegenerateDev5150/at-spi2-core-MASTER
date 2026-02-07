@@ -48,6 +48,8 @@ struct _AtspiDeviceClass
   guint (*map_keysym_modifier) (AtspiDevice *device, guint keysym);
   void (*unmap_keysym_modifier) (AtspiDevice *device, guint keysym);
   guint (*get_keysym_modifier) (AtspiDevice *device, guint keysym);
+  AtspiDeviceCapability (*get_capabilities) (AtspiDevice *device);
+  AtspiDeviceCapability (*set_capabilities) (AtspiDevice *device, AtspiDeviceCapability capabilities);
 };
 
 /**
@@ -103,4 +105,9 @@ void atspi_device_set_app_id (AtspiDevice *device, const gchar *app_id);
 AtspiDevice *atspi_device_new_full (const gchar *app_id);
 
 void atspi_device_clear_key_grabs (AtspiDevice *device);
+
+AtspiDeviceCapability atspi_device_get_capabilities (AtspiDevice *device);
+
+AtspiDeviceCapability atspi_device_set_capabilities (AtspiDevice *device, AtspiDeviceCapability capabilities);
+
 G_END_DECLS

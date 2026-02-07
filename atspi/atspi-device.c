@@ -651,3 +651,38 @@ atspi_device_clear_key_grabs (AtspiDevice *device)
       atspi_device_remove_key_grab (device, grab->id);
     }
 }
+
+/**
+ * atspi_device_get_capabilities:
+ * @device: The device.
+ *
+ * Returns the capabilities currently enabled for this device.
+ *
+ * Since: 2.60
+ */
+AtspiDeviceCapability
+atspi_device_get_capabilities (AtspiDevice *device)
+{
+  return ATSPI_DEVICE_GET_CLASS (device)->get_capabilities (device);
+}
+
+/**
+ * atspi_device_set_capabilities:
+ * @device: The device.
+ * @capabilities: A bitmask specifying the capabilities that should be enabled.
+ * This replaces the existing set of enabled capabilities, so, if it excludes
+ * some capabilities that are currently enabled, then those capabilities may
+ * be disabled.
+ *
+ * Returns: The new set of capabilities that are enabled. This may differ
+ * from the value passed in if the device does not support all of the
+ * requested capabilities.
+ *
+ * Since: 2.60
+ */
+AtspiDeviceCapability
+atspi_device_set_capabilities (AtspiDevice *device,
+                               AtspiDeviceCapability capabilities)
+{
+  return ATSPI_DEVICE_GET_CLASS (device)->set_capabilities (device, capabilities);
+}

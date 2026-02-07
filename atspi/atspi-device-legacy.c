@@ -371,6 +371,18 @@ atspi_device_legacy_finalize (GObject *object)
   device_legacy_parent_class->finalize (object);
 }
 
+static AtspiDeviceCapability
+atspi_device_legacy_get_capabilities (AtspiDevice *device)
+{
+  return ATSPI_DEVICE_CAP_KB_MONITOR | ATSPI_DEVICE_CAP_KB_GRAB;
+}
+
+static AtspiDeviceCapability
+atspi_device_legacy_set_capabilities (AtspiDevice *device, AtspiDeviceCapability capabilities)
+{
+  return atspi_device_legacy_get_capabilities (device);
+}
+
 static void
 atspi_device_legacy_class_init (AtspiDeviceLegacyClass *klass)
 {
@@ -389,6 +401,8 @@ atspi_device_legacy_class_init (AtspiDeviceLegacyClass *klass)
   device_class->map_keysym_modifier = atspi_device_legacy_map_keysym_modifier;
   device_class->unmap_keysym_modifier = atspi_device_legacy_unmap_keysym_modifier;
   device_class->get_keysym_modifier = atspi_device_legacy_get_keysym_modifier;
+  device_class->get_capabilities = atspi_device_legacy_get_capabilities;
+  device_class->set_capabilities = atspi_device_legacy_set_capabilities;
 }
 
 /**

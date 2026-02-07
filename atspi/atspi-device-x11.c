@@ -863,6 +863,18 @@ atspi_device_x11_get_keysym_modifier (AtspiDevice *device, guint keysym)
   return atspi_device_x11_get_modifier (device, keycode);
 }
 
+static AtspiDeviceCapability
+atspi_device_x11_get_capabilities (AtspiDevice *device)
+{
+  return ATSPI_DEVICE_CAP_KB_MONITOR | ATSPI_DEVICE_CAP_KB_GRAB | ATSPI_DEVICE_CAP_POINTER_SYNTH;
+}
+
+static AtspiDeviceCapability
+atspi_device_x11_set_capabilities (AtspiDevice *device, AtspiDeviceCapability capabilities)
+{
+  return atspi_device_x11_get_capabilities (device);
+}
+
 static void
 atspi_device_x11_class_init (AtspiDeviceX11Class *klass)
 {
@@ -882,6 +894,8 @@ atspi_device_x11_class_init (AtspiDeviceX11Class *klass)
   device_class->map_keysym_modifier = atspi_device_x11_map_keysym_modifier;
   device_class->unmap_keysym_modifier = atspi_device_x11_unmap_keysym_modifier;
   device_class->get_keysym_modifier = atspi_device_x11_get_keysym_modifier;
+  device_class->get_capabilities = atspi_device_x11_get_capabilities;
+  device_class->set_capabilities = atspi_device_x11_set_capabilities;
   object_class->finalize = atspi_device_x11_finalize;
 }
 

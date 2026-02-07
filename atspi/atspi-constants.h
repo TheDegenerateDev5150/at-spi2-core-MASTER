@@ -1709,6 +1709,31 @@ G_STATIC_ASSERT(ATSPI_ROLE_COUNT == ATSPI_ROLE_LAST_DEFINED + 1);
     ATSPI_LIVE_ASSERTIVE
   } AtspiLive;
 
+  /**
+   * AtspiDeviceCapability:
+   * @ATSPI_DEVICE_CAP_KB_MONITOR: The capability to monitor keystrokes.
+   * @ATSPI_DEVICE_CAP_KB_SYNTH: The capability to synthesize keystrokes.
+   * @ATSPI_DEVICE_CAP_KB_GRAB: The capability to set key grabs.
+   * @ATSPI_DEVICE_CAP_POINTER_MONITOR: The capability to monitor the location of the pointer.
+   * @ATSPI_DEVICE_CAP_POINTER_SYNTH: The capability to synthesize pointer motion.
+   * @ATSPI_DEVICE_CAP_TOUCH_MONITOR: The capability to monitor touchpad presses.
+   * @ATSPI_DEVICE_CAP_TOUCHPAD_SYNTH: The capability to synthesize touch events.
+   *
+   * Enumeration used to query and enable device capabilities.
+   *
+   * Since: 2.60
+   */
+  typedef enum
+  {
+    ATSPI_DEVICE_CAP_KB_MONITOR = (1 << 0),
+    ATSPI_DEVICE_CAP_KB_SYNTH = (1 << 1),
+    ATSPI_DEVICE_CAP_KB_GRAB = (1 << 2),
+    ATSPI_DEVICE_CAP_POINTER_MONITOR = (1 << 3),
+    ATSPI_DEVICE_CAP_POINTER_SYNTH = (1 << 4),
+    ATSPI_DEVICE_CAP_TOUCH_MONITOR = (1 << 5),
+    ATSPI_DEVICE_CAP_TOUCHPAD_SYNTH = (1 << 6)
+  } AtspiDeviceCapability;
+
 #define ATSPI_DBUS_NAME_REGISTRY "org.a11y.atspi.Registry"
 #define ATSPI_DBUS_PATH_REGISTRY "/org/a11y/atspi/registry"
 #define ATSPI_DBUS_INTERFACE_REGISTRY "org.a11y.atspi.Registry"

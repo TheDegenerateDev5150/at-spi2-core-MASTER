@@ -493,6 +493,18 @@ atspi_device_a11y_manager_set_property (GObject *object,
     }
 }
 
+static AtspiDeviceCapability
+atspi_device_a11y_manager_get_capabilities (AtspiDevice *device)
+{
+  return ATSPI_DEVICE_CAP_KB_MONITOR | ATSPI_DEVICE_CAP_KB_GRAB;
+}
+
+static AtspiDeviceCapability
+atspi_device_a11y_manager_set_capabilities (AtspiDevice *device, AtspiDeviceCapability capabilities)
+{
+  return atspi_device_a11y_manager_get_capabilities (device);
+}
+
 static void
 atspi_device_a11y_manager_class_init (AtspiDeviceA11yManagerClass *klass)
 {
@@ -516,22 +528,24 @@ atspi_device_a11y_manager_class_init (AtspiDeviceA11yManagerClass *klass)
   device_class->ungrab_keyboard = atspi_device_a11y_manager_ungrab_keyboard;
   device_class->add_key_grab = atspi_device_a11y_manager_add_key_grab;
   device_class->remove_key_grab = atspi_device_a11y_manager_remove_key_grab;
+  device_class->get_capabilities = atspi_device_a11y_manager_get_capabilities;
+  device_class->set_capabilities = atspi_device_a11y_manager_set_capabilities;
 
   properties[PROP_SESSION_BUS] =
-    g_param_spec_object ("session-bus",
-                         "Session Bus",
-                         "The session bus",
-                         G_TYPE_DBUS_CONNECTION,
-                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+      g_param_spec_object ("session-bus",
+                           "Session Bus",
+                           "The session bus",
+                           G_TYPE_DBUS_CONNECTION,
+                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_KEYBOARD_MONITOR] =
-    g_param_spec_object ("keyboard-monitor",
-                         "Keyboard Monitor",
-                         "The keyboard monitor proxy",
-                         G_TYPE_DBUS_PROXY,
-                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+      g_param_spec_object ("keyboard-monitor",
+                           "Keyboard Monitor",
+                           "The keyboard monitor proxy",
+                           G_TYPE_DBUS_PROXY,
+                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
-                        }
+}
 
 /**
  * atspi_device_a11y_manager_try_new_full:
