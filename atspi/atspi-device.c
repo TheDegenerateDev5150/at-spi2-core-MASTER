@@ -26,12 +26,21 @@
 #include "atspi-device-x11.h"
 #include "atspi-private.h"
 
-enum {
+enum
+{
+  KEY_PRESSED,
+  KEY_RELEASED,
+  LAST_SIGNAL
+};
+
+enum
+{
   PROP_0,
   PROP_APP_ID,
   NUM_PROPERTIES
 };
 
+static guint device_signals[LAST_SIGNAL] = { 0 };
 static GParamSpec *obj_props[NUM_PROPERTIES];
 
 typedef struct
@@ -150,8 +159,44 @@ atspi_device_class_init (AtspiDeviceClass *klass)
   object_class->set_property = atspi_device_set_property;
 
   /**
-   * AtspiDevice:app-id:
+   * AtspiDevice:key-pressed:
+   * @keycode: the hardware code for the key.
+   * @keysym: the keysym for the key.
+   * @modifiers: a bitflag indicating which key modifiers are active.
+   * @keystring: the text corresponding to the keypress.
    *
+   * This signal is emitted when a key is pressed and
+   * ATSPI_DEVICE_CAP_KB_MONITOR is active for the device.
+   */
+  device_signals[KEY_PRESSED] =
+      g_signal_new ("key-pressed",
+                    G_TYPE_FROM_CLASS (object_class),
+                    G_SIGNAL_RUN_LAST,
+                    0,
+                    NULL, NULL,
+                    atspi_marshal_VOID__UINT_UINT_FLAGS_STRING,
+                    G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, ATSPI_TYPE_MODIFIER_TYPE, G_TYPE_STRING);
+
+  /**
+   * AtspiDevice:key-released:
+   * @keycode: the hardware code for the key.
+   * @keysym: the keysym for the key.
+   * @modifiers: a bitflag indicating which key modifiers are active.
+   * @keystring: the text corresponding to the keypress.
+   *
+   * This signal is emitted when a key is released and
+   * ATSPI_DEVICE_CAP_KB_MONITOR is active for the device.
+   */
+  device_signals[KEY_RELEASED] =
+      g_signal_new ("key-released",
+                    G_TYPE_FROM_CLASS (object_class),
+                    G_SIGNAL_RUN_LAST,
+                    0,
+                    NULL, NULL,
+                    atspi_marshal_VOID__UINT_UINT_FLAGS_STRING,
+                    G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, ATSPI_TYPE_MODIFIER_TYPE, G_TYPE_STRING);
+
+  /*
    * The application ID of the application that created this device.
    * The ID might be used for access control purposes
    * by some device backends.
@@ -235,6 +280,9 @@ atspi_device_notify_key (AtspiDevice *device, gboolean pressed, int keycode, int
   AtspiDevicePrivate *priv = atspi_device_get_instance_private (device);
   GSList *l;
   gboolean ret = FALSE;
+  const char *signal_name = (pressed ? "key-pressed" : "key-released");
+
+  g_signal_emit_by_name (device, signal_name, keycode, keysym, state, text);
 
   for (l = priv->key_watchers; l; l = l->next)
     {
@@ -363,6 +411,9 @@ atspi_device_remove_key_grab (AtspiDevice *device, guint id)
  *
  * Add a callback that will receive a notification whenever a key is
  * pressed or released.
+ *
+ * Deprecated: 2.60: Connect to the key-pressed and key-released signals
+ * instead of using this function.
  */
 void
 atspi_device_add_key_watcher (AtspiDevice *device, AtspiKeyCallback callback, void *user_data, GDestroyNotify callback_destroyed)
