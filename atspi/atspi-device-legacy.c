@@ -374,7 +374,7 @@ atspi_device_legacy_finalize (GObject *object)
 static AtspiDeviceCapability
 atspi_device_legacy_get_capabilities (AtspiDevice *device)
 {
-  return ATSPI_DEVICE_CAP_KEYBOARD_MONITOR | ATSPI_DEVICE_CAP_KB_GRAB;
+  return ATSPI_DEVICE_CAP_KEYBOARD_MONITOR | ATSPI_DEVICE_CAP_KEYBOARD_GRAB;
 }
 
 static AtspiDeviceCapability

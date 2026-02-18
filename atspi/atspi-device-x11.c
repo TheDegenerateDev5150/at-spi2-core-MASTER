@@ -877,7 +877,7 @@ atspi_device_x11_get_capabilities (AtspiDevice *device)
 {
   AtspiDeviceX11 *x11_device = ATSPI_DEVICE_X11 (device);
   AtspiDeviceX11Private *priv = atspi_device_x11_get_instance_private (x11_device);
-  AtspiDeviceCapability caps = ATSPI_DEVICE_CAP_KEYBOARD_MONITOR | ATSPI_DEVICE_CAP_KB_GRAB | ATSPI_DEVICE_CAP_POINTER_SYNTH;
+  AtspiDeviceCapability caps = ATSPI_DEVICE_CAP_KEYBOARD_MONITOR | ATSPI_DEVICE_CAP_KEYBOARD_GRAB | ATSPI_DEVICE_CAP_POINTER_SYNTH;
 
   if (priv->pointer_monitor_enabled)
     caps |= ATSPI_DEVICE_CAP_POINTER_MONITOR;

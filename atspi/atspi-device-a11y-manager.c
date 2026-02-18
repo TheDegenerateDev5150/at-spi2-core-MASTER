@@ -496,7 +496,7 @@ atspi_device_a11y_manager_set_property (GObject *object,
 static AtspiDeviceCapability
 atspi_device_a11y_manager_get_capabilities (AtspiDevice *device)
 {
-  return ATSPI_DEVICE_CAP_KEYBOARD_MONITOR | ATSPI_DEVICE_CAP_KB_GRAB;
+  return ATSPI_DEVICE_CAP_KEYBOARD_MONITOR | ATSPI_DEVICE_CAP_KEYBOARD_GRAB;
 }
 
 static AtspiDeviceCapability
