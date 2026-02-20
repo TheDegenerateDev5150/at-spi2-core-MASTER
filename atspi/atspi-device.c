@@ -30,6 +30,7 @@ enum
 {
   KEY_PRESSED,
   KEY_RELEASED,
+  POINTER_MOVED,
   LAST_SIGNAL
 };
 
@@ -195,6 +196,26 @@ atspi_device_class_init (AtspiDeviceClass *klass)
                     NULL, NULL,
                     atspi_marshal_VOID__UINT_UINT_FLAGS_STRING,
                     G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, ATSPI_TYPE_MODIFIER_TYPE, G_TYPE_STRING);
+
+  /**
+   * AtspiDevice::pointer-moved:
+   * @object: the device which emitted the signal
+   * @accessible: (type AtspiAccessible): The accessible from which the
+   *              coordinates are relative. May be a top-level accessible for
+   *              the application.
+   * @x: The x coordinate relative to @accessible.
+   * @y: The y coordinate relative to @accessible.
+   *
+   * Signals that the pointer has moved.
+   */
+  device_signals[POINTER_MOVED] =
+      g_signal_new ("pointer-moved",
+                    G_TYPE_FROM_CLASS (object_class),
+                    G_SIGNAL_RUN_LAST,
+                    0,
+                    NULL, NULL,
+                    atspi_marshal_VOID__OBJECT_INT_INT,
+                    G_TYPE_NONE, 3, ATSPI_TYPE_ACCESSIBLE, G_TYPE_UINT, G_TYPE_UINT);
 
   /*
    * The application ID of the application that created this device.
