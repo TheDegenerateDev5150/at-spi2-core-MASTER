@@ -25,11 +25,12 @@
 
 #include <gio/gio.h>
 
-
-enum {
+enum
+{
   PROP_0,
   PROP_SESSION_BUS,
   PROP_KEYBOARD_MONITOR,
+  PROP_POINTER_LOCATOR,
   N_PROPERTIES
 };
 
@@ -59,6 +60,7 @@ struct _AtspiDeviceA11yManager
 
   GDBusConnection *session_bus;
   GDBusProxy *keyboard_monitor;
+  GDBusProxy *pointer_locator;
   GSList *grabbed_modifiers;
   GSList *grabbed_keys;
   GSList *virtual_modifiers;
@@ -66,6 +68,8 @@ struct _AtspiDeviceA11yManager
   guint last_observed_state;
 
   guint refresh_timeout_id;
+  guint pointer_locator_handler;
+  gint pointer_locator_tested;
 };
 
 G_DEFINE_TYPE (AtspiDeviceA11yManager, atspi_device_a11y_manager, ATSPI_TYPE_DEVICE)
@@ -339,11 +343,11 @@ atspi_device_a11y_manager_remove_key_grab (AtspiDevice *device, guint id)
 }
 
 static void
-a11y_manager_signal_cb (GDBusProxy *proxy,
-                        gchar *sender_name,
-                        gchar *signal_name,
-                        GVariant *parameters,
-                        gpointer user_data)
+a11y_manager_keyboard_monitor_signal_cb (GDBusProxy *proxy,
+                                         gchar *sender_name,
+                                         gchar *signal_name,
+                                         GVariant *parameters,
+                                         gpointer user_data)
 {
   if (g_strcmp0 (signal_name, "KeyEvent") != 0)
     return;
@@ -382,6 +386,57 @@ a11y_manager_signal_cb (GDBusProxy *proxy,
 }
 
 static void
+a11y_manager_query_pointer_finished (GObject *gobj,
+                                     GAsyncResult *res,
+                                     gpointer user_data)
+{
+  AtspiDeviceA11yManager *device = user_data;
+  GVariant *ret = g_dbus_proxy_call_finish (G_DBUS_PROXY (gobj), res, NULL);
+  GVariant *values = NULL;
+  gchar *bus_name = NULL;
+  gchar *object_path = NULL;
+  double x = 0, y = 0;
+  AtspiAccessible *obj;
+
+  if (!ret)
+    return;
+
+  g_variant_get (ret, "(@a{sv}dd)", &values, &x, &y);
+  g_variant_lookup (values, "app-dbus-name", "s", &bus_name);
+  g_variant_lookup (values, "toplevel-object-path", "o", &object_path);
+  if (bus_name && object_path)
+    {
+      obj = _atspi_ref_accessible (bus_name, object_path);
+      g_signal_emit_by_name (device, "pointer-moved", obj, (gint) x, (gint) y);
+      g_object_unref (obj);
+    }
+
+  g_free (bus_name);
+  g_free (object_path);
+  g_variant_unref (values);
+}
+
+static void
+a11y_manager_pointer_locator_signal_cb (GDBusProxy *proxy,
+                                        gchar *sender_name,
+                                        gchar *signal_name,
+                                        GVariant *parameters,
+                                        gpointer user_data)
+{
+  if (g_strcmp0 (signal_name, "PointerPositionChanged") != 0)
+    return;
+
+  g_dbus_proxy_call (proxy,
+                     "QueryPointer",
+                     NULL,
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     NULL,
+                     a11y_manager_query_pointer_finished,
+                     user_data);
+}
+
+static void
 atspi_device_a11y_manager_init (AtspiDeviceA11yManager *device)
 {
   device->grabbed_modifiers = NULL;
@@ -396,6 +451,7 @@ atspi_device_a11y_manager_finalize (GObject *object)
   AtspiDeviceA11yManager *device = ATSPI_DEVICE_A11Y_MANAGER (object);
 
   g_clear_object (&device->keyboard_monitor);
+  g_clear_object (&device->pointer_locator);
   g_clear_object (&device->session_bus);
   G_OBJECT_CLASS (atspi_device_a11y_manager_parent_class)->finalize (object);
 }
@@ -411,6 +467,56 @@ atspi_device_a11y_manager_dispose (GObject *object)
   if (device->refresh_timeout_id)
     g_source_remove (device->refresh_timeout_id);
   G_OBJECT_CLASS (atspi_device_a11y_manager_parent_class)->dispose (object);
+}
+
+static void
+test_pointer_locator (AtspiDeviceA11yManager *manager_device)
+{
+  GVariant *res;
+  GError *error = NULL;
+
+  res = g_dbus_proxy_call_sync (manager_device->pointer_locator,
+                                "QueryPointer",
+                                NULL,
+                                G_DBUS_CALL_FLAGS_NONE,
+                                -1,
+                                NULL,
+                                &error);
+
+  if (error)
+    {
+      manager_device->pointer_locator_tested = -1;
+      g_warning ("QueryPointer failed: %s", error->message);
+      g_error_free (error);
+    }
+  else
+    manager_device->pointer_locator_tested = 1;
+
+  if (res)
+    g_variant_unref (res);
+}
+
+static void
+enable_pointer_monitor (AtspiDeviceA11yManager *manager_device)
+{
+  if (manager_device->pointer_locator_tested == 0)
+    test_pointer_locator (manager_device);
+
+  if (manager_device->pointer_locator_tested < 0)
+    return;
+
+  if (!manager_device->pointer_locator_handler)
+    manager_device->pointer_locator_handler = g_signal_connect_object (manager_device->pointer_locator, "g-signal", G_CALLBACK (a11y_manager_pointer_locator_signal_cb), manager_device, 0);
+}
+
+static void
+disable_pointer_monitor (AtspiDeviceA11yManager *manager_device)
+{
+  if (manager_device->pointer_locator_handler)
+    {
+      g_signal_handler_disconnect (manager_device->pointer_locator, manager_device->pointer_locator_handler);
+      manager_device->pointer_locator_handler = 0;
+    }
 }
 
 static void
@@ -446,7 +552,7 @@ atspi_device_a11y_manager_constructed (GObject *object)
                           -1,
                           NULL,
                           NULL);
-  g_signal_connect_object (device->keyboard_monitor, "g-signal", G_CALLBACK (a11y_manager_signal_cb), device, 0);
+  g_signal_connect_object (device->keyboard_monitor, "g-signal", G_CALLBACK (a11y_manager_keyboard_monitor_signal_cb), device, 0);
 }
 
 static void
@@ -464,6 +570,9 @@ atspi_device_a11y_manager_get_property (GObject *object,
       break;
     case PROP_KEYBOARD_MONITOR:
       g_value_set_object (value, device->keyboard_monitor);
+      break;
+    case PROP_POINTER_LOCATOR:
+      g_value_set_object (value, device->pointer_locator);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -487,6 +596,9 @@ atspi_device_a11y_manager_set_property (GObject *object,
     case PROP_KEYBOARD_MONITOR:
       device->keyboard_monitor = g_value_dup_object (value);
       break;
+    case PROP_POINTER_LOCATOR:
+      device->pointer_locator = g_value_dup_object (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -496,12 +608,25 @@ atspi_device_a11y_manager_set_property (GObject *object,
 static AtspiDeviceCapability
 atspi_device_a11y_manager_get_capabilities (AtspiDevice *device)
 {
-  return ATSPI_DEVICE_CAP_KEYBOARD_MONITOR | ATSPI_DEVICE_CAP_KEYBOARD_GRAB;
+  AtspiDeviceA11yManager *manager_device = ATSPI_DEVICE_A11Y_MANAGER (device);
+  AtspiDeviceCapability caps = ATSPI_DEVICE_CAP_KEYBOARD_MONITOR | ATSPI_DEVICE_CAP_KEYBOARD_GRAB;
+
+  if (manager_device->pointer_locator_handler)
+    caps |= ATSPI_DEVICE_CAP_POINTER_MONITOR;
+
+  return caps;
 }
 
 static AtspiDeviceCapability
 atspi_device_a11y_manager_set_capabilities (AtspiDevice *device, AtspiDeviceCapability capabilities)
 {
+  AtspiDeviceA11yManager *manager_device = ATSPI_DEVICE_A11Y_MANAGER (device);
+
+  if (capabilities & ATSPI_DEVICE_CAP_POINTER_MONITOR && !manager_device->pointer_locator_handler)
+    enable_pointer_monitor (manager_device);
+  else if (!(capabilities & ATSPI_DEVICE_CAP_POINTER_MONITOR) && manager_device->pointer_locator_handler)
+    disable_pointer_monitor (manager_device);
+
   return atspi_device_a11y_manager_get_capabilities (device);
 }
 
@@ -544,6 +669,12 @@ atspi_device_a11y_manager_class_init (AtspiDeviceA11yManagerClass *klass)
                            "The keyboard monitor proxy",
                            G_TYPE_DBUS_PROXY,
                            G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  properties[PROP_POINTER_LOCATOR] =
+      g_param_spec_object ("pointer-locator",
+                           "Pointer Locator",
+                           "The pointer locator proxy",
+                           G_TYPE_DBUS_PROXY,
+                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 }
 
@@ -571,6 +702,7 @@ atspi_device_a11y_manager_try_new_full (const gchar *app_id)
                                                         ATSPI_DBUS_INTERFACE_KEYBOARD_MONITOR,
                                                         NULL,
                                                         &error);
+  GDBusProxy *pointer_locator;
 
   if (error)
     {
@@ -587,9 +719,19 @@ atspi_device_a11y_manager_try_new_full (const gchar *app_id)
       return NULL;
     }
 
+  pointer_locator = g_dbus_proxy_new_sync (session_bus,
+                                           G_DBUS_PROXY_FLAGS_NONE,
+                                           NULL,
+                                           ATSPI_DBUS_NAME_A11Y_MANAGER,
+                                           ATSPI_DBUS_PATH_A11Y_MANAGER,
+                                           ATSPI_DBUS_INTERFACE_POINTER_LOCATOR,
+                                           NULL,
+                                           &error);
+
   AtspiDeviceA11yManager *device = g_object_new (ATSPI_TYPE_DEVICE_A11Y_MANAGER,
                                                  "session-bus", session_bus,
                                                  "keyboard-monitor", keyboard_monitor,
+                                                 "pointer-locator", pointer_locator,
                                                  "app-id", app_id,
                                                  NULL);
 

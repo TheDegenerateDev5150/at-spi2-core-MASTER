@@ -1770,6 +1770,7 @@ G_STATIC_ASSERT(ATSPI_ROLE_COUNT == ATSPI_ROLE_LAST_DEFINED + 1);
 #define ATSPI_DBUS_INTERFACE_EVENT_SCREEN_READER "org.a11y.atspi.Event.ScreenReader"
 
 #define ATSPI_DBUS_INTERFACE_KEYBOARD_MONITOR "org.freedesktop.a11y.KeyboardMonitor"
+#define ATSPI_DBUS_INTERFACE_POINTER_LOCATOR "org.freedesktop.a11y.PointerLocator"
 #define ATSPI_DBUS_NAME_A11Y_MANAGER "org.freedesktop.a11y.Manager"
 #define ATSPI_DBUS_PATH_A11Y_MANAGER "/org/freedesktop/a11y/Manager"
 
