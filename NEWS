@@ -3,8 +3,9 @@ What's new in at-spi2-core 2.59.90:
 * AtspiDevice: Add API to enable and disable features. This can be used
   to test whether particular features are supported by the device.
 
-* AtspiDevice: Add a pointer-moved signal. Currently only supported by the
-  X11 backend.
+* AtspiDevice: Add a pointer-moved signal. This is supported on X11 and
+  on Wayland when the compositor supports the
+  org.freedesktop.a11y.PointerLocator interface.
 
 * AtspiDevice: Add key-pressed and key-released signals. Deprecate
   atspi_device_add_key_watcher.
