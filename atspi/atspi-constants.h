@@ -166,13 +166,15 @@ G_STATIC_ASSERT (ATSPI_COORD_TYPE_COUNT == ATSPI_COORD_TYPE_LAST_DEFINED + 1);
  * AtspiCollectionSortOrder:
  * @ATSPI_Collection_SORT_ORDER_INVALID: Invalid sort order
  * @ATSPI_Collection_SORT_ORDER_CANONICAL: Canonical sort order
- * @ATSPI_Collection_SORT_ORDER_FLOW: Flow sort order
- * @ATSPI_Collection_SORT_ORDER_TAB: Tab sort order
+ * @ATSPI_Collection_SORT_ORDER_FLOW: Flow sort order. reserved for future use.
+ * @ATSPI_Collection_SORT_ORDER_TAB: Tab sort order. Reserved for future use.
  * @ATSPI_Collection_SORT_ORDER_REVERSE_CANONICAL: Reverse canonical sort order
- * @ATSPI_Collection_SORT_ORDER_REVERSE_FLOW: Reverse flow sort order
- * @ATSPI_Collection_SORT_ORDER_REVERSE_TAB: Reverse tab sort order
- * @ATSPI_Collection_SORT_ORDER_LAST_DEFINED: Used only to determine the end of the
- * enumeration.
+ * @ATSPI_Collection_SORT_ORDER_REVERSE_FLOW: Reverse flow sort order. Reserved
+ * for future use.
+ * @ATSPI_Collection_SORT_ORDER_REVERSE_TAB: Reverse tab sort order. Reserved
+ * for future use.
+ * @ATSPI_Collection_SORT_ORDER_LAST_DEFINED: Used only to determine the end of
+ * the enumeration.
 
  *
  * Enumeration used by interface #AtspiCollection to specify
