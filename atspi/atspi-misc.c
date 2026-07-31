@@ -2218,8 +2218,8 @@ _atspi_strdup_and_adjust_for_dbus (const char *s)
  * @micro: (out): the micro/patch version.
  *
  * Returns the version of the AT-SPI library being used at runtime.
-
-* Since: 2.50
+ *
+ * Since: 2.50
  */
 void
 atspi_get_version (gint *major, gint *minor, gint *micro)
